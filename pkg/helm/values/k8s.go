@@ -3,8 +3,8 @@ package values
 import (
 	"strings"
 
-	"github.com/loft-sh/vcluster/cmd/vclusterctl/cmd/app/create"
-	"github.com/loft-sh/vcluster/cmd/vclusterctl/log"
+	"github.com/loft-sh/vcluster/pkg/helm"
+	"github.com/loft-sh/vcluster/pkg/log"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -29,8 +29,8 @@ var K8SEtcdVersionMap = map[string]string{
 	"1.20": "k8s.gcr.io/etcd:3.4.13-0",
 }
 
-func getDefaultK8SReleaseValues(client kubernetes.Interface, createOptions *create.CreateOptions, log log.Logger) (string, error) {
-	serverVersionString, serverMinorInt, err := getKubernetesVersion(client, createOptions)
+func getDefaultK8SReleaseValues(client kubernetes.Interface, chartOptions *helm.ChartOptions, log log.Logger) (string, error) {
+	serverVersionString, serverMinorInt, err := getKubernetesVersion(client, chartOptions)
 	if err != nil {
 		return "", err
 	}
@@ -63,5 +63,5 @@ etcd:
 	values = strings.ReplaceAll(values, "##API_IMAGE##", apiImage)
 	values = strings.ReplaceAll(values, "##CONTROLLER_IMAGE##", controllerImage)
 	values = strings.ReplaceAll(values, "##ETCD_IMAGE##", etcdImage)
-	return addCommonReleaseValues(values, createOptions)
+	return addCommonReleaseValues(values, chartOptions)
 }

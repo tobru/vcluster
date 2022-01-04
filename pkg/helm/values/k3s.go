@@ -3,15 +3,16 @@ package values
 import (
 	"context"
 	"fmt"
-	"github.com/loft-sh/vcluster/cmd/vclusterctl/cmd/app/create"
-	"github.com/loft-sh/vcluster/cmd/vclusterctl/log"
+	"regexp"
+	"strconv"
+	"strings"
+
+	"github.com/loft-sh/vcluster/pkg/helm"
+	"github.com/loft-sh/vcluster/pkg/log"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"regexp"
-	"strconv"
-	"strings"
 )
 
 var K3SVersionMap = map[string]string{
@@ -43,16 +44,16 @@ var baseArgsMap = map[string]string{
 var replaceRegEx = regexp.MustCompile("[^0-9]+")
 var errorMessageFind = "provided IP is not in the valid range. The range of valid IPs is "
 
-func getDefaultK3SReleaseValues(client kubernetes.Interface, createOptions *create.CreateOptions, log log.Logger) (string, error) {
+func getDefaultK3SReleaseValues(client kubernetes.Interface, chartOptions *helm.ChartOptions, log log.Logger) (string, error) {
 	var (
-		image               = createOptions.K3SImage
+		image               = chartOptions.K3SImage
 		serverVersionString string
 		serverMinorInt      int
 		err                 error
 	)
 
 	if image == "" {
-		serverVersionString, serverMinorInt, err = getKubernetesVersion(client, createOptions)
+		serverVersionString, serverMinorInt, err = getKubernetesVersion(client, chartOptions)
 		if err != nil {
 			return "", err
 		}
@@ -78,45 +79,45 @@ func getDefaultK3SReleaseValues(client kubernetes.Interface, createOptions *crea
 ##BASEARGS##
 `
 	values = strings.ReplaceAll(values, "##IMAGE##", image)
-	if createOptions.K3SImage == "" {
+	if chartOptions.K3SImage == "" {
 		baseArgs := baseArgsMap[serverVersionString]
 		values = strings.ReplaceAll(values, "##BASEARGS##", baseArgs)
 	}
 
-	return addCommonReleaseValues(values, createOptions)
+	return addCommonReleaseValues(values, chartOptions)
 }
 
-func addCommonReleaseValues(values string, createOptions *create.CreateOptions) (string, error) {
+func addCommonReleaseValues(values string, chartOptions *helm.ChartOptions) (string, error) {
 	values += `
 serviceCIDR: ##CIDR##
 storage:
   size: 5Gi`
-	if createOptions.DisableIngressSync {
+	if chartOptions.DisableIngressSync {
 		values += `
 syncer:
   extraArgs: ["--disable-sync-resources=ingresses"]`
 	}
-	if createOptions.CreateClusterRole {
+	if chartOptions.CreateClusterRole {
 		values += `
 rbac:
   clusterRole:
     create: true`
 	}
 
-	if createOptions.Expose {
+	if chartOptions.Expose {
 		values += `
 service:
   type: LoadBalancer`
 	}
 
-	values = strings.ReplaceAll(values, "##CIDR##", createOptions.CIDR)
+	values = strings.ReplaceAll(values, "##CIDR##", chartOptions.CIDR)
 	values = strings.TrimSpace(values)
 	return values, nil
 }
 
-func getKubernetesVersion(client kubernetes.Interface, createOptions *create.CreateOptions) (string, int, error) {
-	if createOptions.KubernetesVersion != "" {
-		version := createOptions.KubernetesVersion
+func getKubernetesVersion(client kubernetes.Interface, chartOptions *helm.ChartOptions) (string, int, error) {
+	if chartOptions.KubernetesVersion != "" {
+		version := chartOptions.KubernetesVersion
 		if version[0] == 'v' {
 			version = version[1:]
 		}

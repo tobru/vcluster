@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/loft-sh/vcluster/cmd/vclusterctl/cmd/app/create"
-	"github.com/loft-sh/vcluster/cmd/vclusterctl/cmd/app/create/values"
+	"github.com/loft-sh/vcluster/pkg/helm/values"
 	"github.com/loft-sh/vcluster/pkg/upgrade"
 
 	"github.com/loft-sh/vcluster/cmd/vclusterctl/flags"
@@ -68,7 +68,7 @@ vcluster create test --namespace test
 	cobraCmd.Flags().StringVar(&cmd.ChartName, "chart-name", "vcluster", "The virtual cluster chart name to use")
 	cobraCmd.Flags().StringVar(&cmd.ChartRepo, "chart-repo", "https://charts.loft.sh", "The virtual cluster chart repo to use")
 	cobraCmd.Flags().StringVar(&cmd.K3SImage, "k3s-image", "", "DEPRECATED: use --extra-values instead")
-	cobraCmd.Flags().StringVar(&cmd.Distro, "distro", "k3s", fmt.Sprintf("Kubernetes distro to use for the virtual cluster. Allowed distros: %s", strings.Join(values.AllowedDistros, ", ")))
+	cobraCmd.Flags().StringVar(&cmd.Distro, "distro", "k3s", fmt.Sprintf("Kubernetes distro to use for the virtual cluster. Allowed distros: %s", strings.Join(create.AllowedDistros, ", ")))
 	cobraCmd.Flags().StringVar(&cmd.ReleaseValues, "release-values", "", "DEPRECATED: use --extra-values instead")
 	cobraCmd.Flags().StringVar(&cmd.KubernetesVersion, "kubernetes-version", "", "The kubernetes version to use (e.g. v1.20). Patch versions are not supported")
 	cobraCmd.Flags().StringSliceVarP(&cmd.ExtraValues, "extra-values", "f", []string{}, "Path where to load extra helm values from")
@@ -173,7 +173,11 @@ func (cmd *CreateCmd) Run(args []string) error {
 	}
 
 	// load the default values
-	chartValues, err := values.GetDefaultReleaseValues(client, &cmd.CreateOptions, cmd.log)
+	chartOptions, err := cmd.CreateOptions.ToChartOptions(cmd.Namespace)
+	if err != nil {
+		return err
+	}
+	chartValues, err := values.GetDefaultReleaseValues(client, chartOptions, cmd.log)
 	if err != nil {
 		return err
 	}
