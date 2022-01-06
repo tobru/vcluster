@@ -5,7 +5,7 @@ import (
 
 	"github.com/loft-sh/vcluster/pkg/helm"
 	"github.com/loft-sh/vcluster/pkg/log"
-	"k8s.io/client-go/kubernetes"
+	"k8s.io/apimachinery/pkg/version"
 )
 
 var K8SAPIVersionMap = map[string]string{
@@ -29,8 +29,9 @@ var K8SEtcdVersionMap = map[string]string{
 	"1.20": "k8s.gcr.io/etcd:3.4.13-0",
 }
 
-func getDefaultK8SReleaseValues(client kubernetes.Interface, chartOptions *helm.ChartOptions, log log.Logger) (string, error) {
-	serverVersionString, serverMinorInt, err := getKubernetesVersion(client, chartOptions)
+func getDefaultK8SReleaseValues(serverVersion *version.Info, chartOptions *helm.ChartOptions, log log.Logger) (string, error) {
+	serverVersionString := GetKubernetesVersion(serverVersion)
+	serverMinorInt, err := GetKubernetesMinorVersion(serverVersion)
 	if err != nil {
 		return "", err
 	}

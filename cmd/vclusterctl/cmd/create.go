@@ -20,6 +20,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -172,12 +173,27 @@ func (cmd *CreateCmd) Run(args []string) error {
 		}
 	}
 
+	var kubernetesVersion *version.Info
+	if cmd.KubernetesVersion != "" {
+		kubernetesVersion, err = values.ParseKubernetesVersionInfo(cmd.KubernetesVersion)
+		if err != nil {
+			return err
+		}
+	}
+
+	if kubernetesVersion == nil {
+		kubernetesVersion, err = client.DiscoveryClient.ServerVersion()
+		if err != nil {
+			return err
+		}
+	}
+
 	// load the default values
 	chartOptions, err := cmd.CreateOptions.ToChartOptions(cmd.Namespace)
 	if err != nil {
 		return err
 	}
-	chartValues, err := values.GetDefaultReleaseValues(client, chartOptions, cmd.log)
+	chartValues, err := values.GetDefaultReleaseValues(kubernetesVersion, chartOptions, cmd.log)
 	if err != nil {
 		return err
 	}
