@@ -5,16 +5,15 @@ import (
 
 	"github.com/loft-sh/vcluster/pkg/helm"
 	"github.com/loft-sh/vcluster/pkg/log"
-	"k8s.io/apimachinery/pkg/version"
 )
 
 var K0SVersionMap = map[string]string{
 	"1.22": "k0sproject/k0s:v1.22.4-k0s.0",
 }
 
-func getDefaultK0SReleaseValues(serverVersion *version.Info, chartOptions *helm.ChartOptions, log log.Logger) (string, error) {
-	serverVersionString := GetKubernetesVersion(serverVersion)
-	serverMinorInt, err := GetKubernetesMinorVersion(serverVersion)
+func getDefaultK0SReleaseValues(chartOptions *helm.ChartOptions, log log.Logger) (string, error) {
+	serverVersionString := GetKubernetesVersion(chartOptions.KubernetesVersion)
+	serverMinorInt, err := GetKubernetesMinorVersion(chartOptions.KubernetesVersion)
 	if err != nil {
 		return "", err
 	}

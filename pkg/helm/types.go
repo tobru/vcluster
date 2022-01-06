@@ -1,5 +1,7 @@
 package helm
 
+import "k8s.io/apimachinery/pkg/version"
+
 const (
 	K3SChart = "vcluster"
 	K0SChart = "vcluster-k0s"
@@ -16,6 +18,6 @@ type ChartOptions struct {
 	DisableIngressSync bool
 	Expose             bool
 	K3SImage           string
-	KubernetesVersion  string
+	KubernetesVersion  *version.Info
 	Namespace          string
 }

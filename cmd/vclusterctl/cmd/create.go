@@ -193,11 +193,11 @@ func (cmd *CreateCmd) Run(args []string) error {
 	}
 
 	// load the default values
-	chartOptions, err := cmd.ToChartOptions()
+	chartOptions, err := cmd.ToChartOptions(kubernetesVersion)
 	if err != nil {
 		return err
 	}
-	chartValues, err := values.GetDefaultReleaseValues(kubernetesVersion, chartOptions, cmd.log)
+	chartValues, err := values.GetDefaultReleaseValues(chartOptions, cmd.log)
 	if err != nil {
 		return err
 	}
@@ -275,7 +275,7 @@ func (cmd *CreateCmd) Run(args []string) error {
 	return nil
 }
 
-func (cmd *CreateCmd) ToChartOptions() (*helm.ChartOptions, error) {
+func (cmd *CreateCmd) ToChartOptions(kubernetesVersion *version.Info) (*helm.ChartOptions, error) {
 	if !util.Contains(cmd.Distro, AllowedDistros) {
 		return nil, fmt.Errorf("unsupported distro %s, please select one of: %s", cmd.Distro, strings.Join(AllowedDistros, ", "))
 	}
@@ -293,7 +293,7 @@ func (cmd *CreateCmd) ToChartOptions() (*helm.ChartOptions, error) {
 		DisableIngressSync: cmd.DisableIngressSync,
 		Expose:             cmd.Expose,
 		K3SImage:           cmd.K3SImage,
-		KubernetesVersion:  cmd.KubernetesVersion,
+		KubernetesVersion:  kubernetesVersion,
 		Namespace:          cmd.Namespace,
 	}, nil
 }

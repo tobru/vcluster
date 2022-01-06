@@ -44,7 +44,7 @@ var baseArgsMap = map[string]string{
 var replaceRegEx = regexp.MustCompile("[^0-9]+")
 var errorMessageFind = "provided IP is not in the valid range. The range of valid IPs is "
 
-func getDefaultK3SReleaseValues(serverVersion *version.Info, chartOptions *helm.ChartOptions, log log.Logger) (string, error) {
+func getDefaultK3SReleaseValues(chartOptions *helm.ChartOptions, log log.Logger) (string, error) {
 	var (
 		image               = chartOptions.K3SImage
 		serverVersionString string
@@ -53,8 +53,8 @@ func getDefaultK3SReleaseValues(serverVersion *version.Info, chartOptions *helm.
 	)
 
 	if image == "" {
-		serverVersionString := GetKubernetesVersion(serverVersion)
-		serverMinorInt, err = GetKubernetesMinorVersion(serverVersion)
+		serverVersionString = GetKubernetesVersion(chartOptions.KubernetesVersion)
+		serverMinorInt, err = GetKubernetesMinorVersion(chartOptions.KubernetesVersion)
 		if err != nil {
 			return "", err
 		}
